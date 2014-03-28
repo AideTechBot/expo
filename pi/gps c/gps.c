@@ -1,6 +1,6 @@
 /* 
 	GPS.C
-
+	v.3
 	written by: Manuel Dionne
         credit to: the internet
 */
