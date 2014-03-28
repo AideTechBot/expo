@@ -2,7 +2,7 @@
 	GPS.C
 
 	written by: Manuel Dionne
-    credit to: the internet
+        credit to: the internet
 */
 
 #include <time.h>
@@ -25,28 +25,33 @@
 #define FALSE 0
 #define BILLION 1E9
 
+double currenttime(struct timespec rawtime) {
+	double time;
+	clock_gettime(CLOCK_REALTIME, &rawtime);
+	time = (rawtime.tv_sec) + (double)(rawtime.tv_nsec) / (double)BILLION;
+	return time;
+}
+
 
 int main(int argc,char *argv[]) {
 
 	int refreshtime = 0;
+	struct timespec rawtime;
+	double oldtime;
+	char command[118];
+	char aplay[19];
 	while(TRUE) {
-		struct timespec rawtime;
-		clock_gettime(CLOCK_REALTIME, &rawtime);
-		double oldtime;
 		if(!oldtime > 1)
 			oldtime = 0.000000;
   		printf ("[GPS] %lf\n", time);
 
 		//encoding the stuff
-		char command[118];
 		sprintf(command, "echo \"|START|%lf|%d_%d|%d|END\" | sudo ./minimodem --tx -8 -f %s %d --space %d --mark %d", oldtime, POSITION_X, POSITION_Y, IDENTIFIER, FNAME, BAUD, SPACE, MARK);
 		printf("[GPS] %s\n", command);
 		system(command);
 
 		//transmitting it 
-		char aplay[19];
-		clock_gettime(CLOCK_REALTIME, &rawtime);
-		oldtime = (rawtime.tv_sec) + (double)(rawtime.tv_nsec) / (double)BILLION;
+		oldtime = currenttime(&rawtime);
 		sprintf(aplay, "sudo aplay %s -f S16_LE", FNAME);
 		system(aplay);
 		printf("[GPS] sleeping...\n");
