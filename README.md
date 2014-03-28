@@ -1,4 +1,4 @@
 expo
 ====
 
-science fair project
+This is a repo for my science fair project
