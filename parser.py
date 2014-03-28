@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 	GPS.PY
-    v.2
+        v.2
 
 	written by: Manuel Dionne
 	credit to: the internet
