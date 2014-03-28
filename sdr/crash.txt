@@ -1,0 +1,4 @@
+Object reference not set to an instance of an object.
+   at SDRSharp.RTLSDR.RtlSdrIO.Stop()
+   at SDRSharp.Radio.StreamControl.Stop()
+   at SDRSharp.Radio.StreamControl.Finalize()

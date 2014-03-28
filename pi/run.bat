@@ -1,0 +1,2 @@
+python gpsf.py
+pause
