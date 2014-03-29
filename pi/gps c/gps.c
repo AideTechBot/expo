@@ -51,7 +51,7 @@ int main(int argc,char *argv[]) {
 		system(command);
 
 		//transmitting it 
-		oldtime = currenttime(&rawtime);
+		oldtime = currenttime(rawtime);
 		sprintf(aplay, "sudo aplay %s -f S16_LE", FNAME);
 		system(aplay);
 		printf("[GPS] sleeping...\n");
