@@ -20,7 +20,7 @@
 #define POSITION_X 300
 #define POSITION_Y 600
 #define IDENTIFIER 1
-#define LOOPDELAY 2
+#define LOOPDELAY 8
 #define TRUE 1
 #define FALSE 0
 #define BILLION 1E9
@@ -37,7 +37,7 @@ int main(int argc,char *argv[]) {
 
 	int refreshtime = 0;
 	struct timespec rawtime;
-	double oldtime;
+	double oldtime, starttime, stoptime;
 	char command[118];
 	char aplay[19];
 	while(TRUE) {
@@ -52,10 +52,21 @@ int main(int argc,char *argv[]) {
 
 		//transmitting it 
 		oldtime = currenttime(rawtime);
+		starttime = currenttime(rawtime);
 		sprintf(aplay, "sudo aplay %s -f S16_LE", FNAME);
 		system(aplay);
-		printf("[GPS] sleeping...\n");
-		sleep(2);
+		stoptime = currenttime(rawtime);
+		if((8 - (stoptime - starttime)) > 0)
+		{
+			sleep(8 - (stoptime - starttime));
+			printf("[GPS] sleeping...\n");
+			sleep(LOOPDELAY);
+		}
+		else
+		{
+			printf("[GPS] sleeping...\n");
+			sleep(LOOPDELAY + (8 - (stoptime - starttime)));
+		}
 		refreshtime++;
 		if(refreshtime >= 100)
 		{
