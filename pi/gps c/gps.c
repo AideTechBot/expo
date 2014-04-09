@@ -20,7 +20,7 @@
 #define POSITION_X 300
 #define POSITION_Y 600
 #define IDENTIFIER 1
-#define LOOPDELAY 8
+#define LOOPDELAY 14
 #define TRUE 1
 #define FALSE 0
 #define BILLION 1E9
