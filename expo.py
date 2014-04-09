@@ -11,14 +11,28 @@ from pyglet.window import key
 from pyglet.window import mouse
 import primitives
 import sys
+import threading
+import socket
+from decimal import *
+from threading import Thread
 from utils import *
+
+data = []
 FPS = 60
+address = ("", 9090)
 config = pyglet.gl.Config(sample_buffers=1, samples=4)
+baud = '60'
+mark_freq = '20300'
+space_freq = '20250'
+confidence = '0.4'
+calc_factor = Decimal(0.250)
+getcontext().prec = 6
+
 
 class PrimWin(pyglet.window.Window):
 
     def __init__(self):
-        super(PrimWin, self).__init__(fullscreen=True,config=config, caption='GPS')
+        super(PrimWin, self).__init__(fullscreen=False,config=config, caption='GPS', height = 1080, width = 1920)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
@@ -118,11 +132,28 @@ class PrimWin(pyglet.window.Window):
         #self.P.render()
         #self.l.render()
         self.batch.draw()
-        #set the default position of the satallites(we will change this later to be dynamic and maybe update their position)
-        self.sprites[1].x = 400
-        self.sprites[1].y = 600
-        self.sprites[2].x = 1100
-        self.sprites[2].y = 700
+        #set the default position of the satallites(we will change this later to be dynamic and maybe update their position) <-- made it dynamic :D
+        if not self.dragable:
+            if data:
+                if data[3] == 1:
+                    self.sprites[1].x = int(data[2][0]) - 25
+                    self.sprites[1].y = int(data[2][1]) - 25
+                    self.cone.x = int(data[2][0])
+                    self.cone.y = int(data[2][1])
+                if data[3] == 2:
+                    self.sprites[2].x = int(data[2][0]) - 25
+                    self.sprites[2].y = int(data[2][1]) - 25
+                    self.ctwo.x = int(data[2][0])
+                    self.ctwo.y = int(data[2][1])
+        else:
+            self.sprites[1].x = 400
+            self.sprites[1].y = 600
+            self.sprites[2].x = 1100
+            self.sprites[2].y = 700
+            self.cone.x = 425
+            self.cone.y = 625
+            self.ctwo.x = 1125
+            self.ctwo.y = 725
         self.sprites[3].x = 800
         self.sprites[3].y = 200
 
@@ -132,8 +163,8 @@ class PrimWin(pyglet.window.Window):
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self.dragable:
             if buttons & mouse.LEFT:
-                if x > self.sprites[0].x and x < (self.sprites[0].x + 50):
-                    if y > self.sprites[0].y and y < (self.sprites[0].y + 50):
+                if x > self.sprites[0].x and x < (self.sprites[0].x + 1000):
+                    if y > self.sprites[0].y and y < (self.sprites[0].y + 1000):
                         self.debuglabel.text = "Mouse drag"
                         self.sprites[0].x = x - 25
                         self.sprites[0].y = y - 25
@@ -141,18 +172,47 @@ class PrimWin(pyglet.window.Window):
     def update(self, dt):
         # Scheduled event
 
-        #first of all receive all of the packets
-        #packet = sys.stdin.read()
-        #try:
-        #    time,finalpos,identifier = parse_packet(packet))
-        #except (ValueError,UnboundLocalError,IndexError) as e:
-        #    print "[ERROR] Packet non-decodable:" + e
+        #set the labels position
+        self.distlabelone.x = 100
+        self.distlabeltwo.x = 100
+        self.distlabelthree.x = 100
+        self.distlabelone.y = 100
+        self.distlabeltwo.y = 75
+        self.distlabelthree.y = 50
 
-
-        #set the size of the circles depending on were the gps is
-        self.cone.radius = getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y)
-        self.ctwo.radius = getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y)
+        #sat 3 is hardcoded
+        self.distlabelthree.text = "Dist. a SAT3: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[3].x,self.sprites[3].y))
         self.cthree.radius = getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[3].x,self.sprites[3].y)
+
+        #packet handling
+        print "----", self.dragable, data
+        if not self.dragable:
+            if data:
+                print "yes"
+                if data[3] == 1:
+                    self.cone.radius = int(data[1])
+                    self.distlabelone.text = "Dist. a SAT1: %s"% str(data[1])
+                if data[3] == 2:
+                    self.ctwo.radius = int(data[1])
+                    self.distlabeltwo.text = "Dist. a SAT2: %s"% str(data[1])
+        else:
+            self.distlabelone.text = "Dist. a SAT1: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y))
+            self.distlabeltwo.text = "Dist. a SAT2: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y))
+
+            #set the size of the circles depending on were the gps is
+            self.cone.radius = getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y)
+            self.ctwo.radius = getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y)
+
+        #set the coords
+        if not self.dragable:
+                SAT1circle = [self.sprites[1].x,self.sprites[1].y,self.cone.radius]
+                SAT2circle = [self.sprites[2].x,self.sprites[2].y,self.ctwo.radius]
+        else:
+            SAT1circle = [self.sprites[1].x,self.sprites[1].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y)]
+            SAT2circle = [self.sprites[2].x,self.sprites[2].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y)]
+
+        #alone once again :(
+        SAT3circle = [self.sprites[3].x,self.sprites[3].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[3].x,self.sprites[3].y)]
 
         #set the a and b points for the lines
         self.lone.a2 = (self.sprites[0].x - 25, self.sprites[0].y - 25)
@@ -161,22 +221,6 @@ class PrimWin(pyglet.window.Window):
         self.lone.b2 = (self.sprites[1].x - 25, self.sprites[1].y - 25)
         self.ltwo.b2 = (self.sprites[2].x - 25, self.sprites[2].y - 25)
         self.lthree.b2 = (self.sprites[3].x - 25, self.sprites[3].y - 25)
-
-        #set the labels position and text
-        self.distlabelone.text = "Dist. a SAT1: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y))
-        self.distlabeltwo.text = "Dist. a SAT2: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y))
-        self.distlabelthree.text = "Dist. a SAT3: %s"% str(getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[3].x,self.sprites[3].y))
-        self.distlabelone.x = 100
-        self.distlabeltwo.x = 100
-        self.distlabelthree.x = 100
-        self.distlabelone.y = 100
-        self.distlabeltwo.y = 75
-        self.distlabelthree.y = 50
-
-        #set the coords
-        SAT1circle = [self.sprites[1].x,self.sprites[1].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[1].x,self.sprites[1].y)]
-        SAT2circle = [self.sprites[2].x,self.sprites[2].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[2].x,self.sprites[2].y)]
-        SAT3circle = [self.sprites[3].x,self.sprites[3].y,getdistance(self.sprites[0].x,self.sprites[0].y,self.sprites[3].x,self.sprites[3].y)]
         
         SAT1_SAT2 = findintersect(SAT1circle,SAT2circle)
         #print "sat1 to sat2", SAT1_SAT2
@@ -196,8 +240,11 @@ class PrimWin(pyglet.window.Window):
 
         if(SAT1_SAT2[3] == SAT2_SAT3[1] and SAT1_SAT2[4] == SAT2_SAT3[2]):
             coords = "'{0}', '{1}'".format(int(SAT1_SAT2[3]), int(SAT1_SAT2[4]))
-        #and finally updating the label
+        #and finally updating the label and setting the gps pos
         self.coordlabel.text = "Coord. du GPS: %s" % coords
+        if not coords == "N/A":
+            self.sprites[0].x = int(coords[0])
+            self.sprites[0].y = int(coords[1])
 
             
     def on_key_press(self, symbol, modifiers):
@@ -243,6 +290,24 @@ class PrimWin(pyglet.window.Window):
         if symbol == key.ESCAPE:
             self.on_close()
 
+#packet handling
+def packethandler():
+    while True:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(address)
+        message, addr = sock.recvfrom(2048)
+        sock.close()
+        print message
+        try:
+            exec(message)
+        except Exception, e:
+            print "GOT AN ERROR: ", e
+        print packet
+        global data
+        data = packet
+
+
 if __name__ == '__main__':
     PrimWin()
-    sys.exit(pyglet.app.run())
+    packetreception = Thread(target = packethandler).start()
+    window = Thread(target = sys.exit, args = (pyglet.app.run())).start()

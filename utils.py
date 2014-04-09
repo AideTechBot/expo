@@ -142,13 +142,21 @@ def findintersect(circle1,circle2):
     return coords
 
 
+"""
+function parse packet
+
+returns the time and pos in a GPS packet that looks like this:
+START|TIME|POS|IDENTIFIER|END
+
+returns: float time, list position, int identifier
+"""
 def parse_packet(packet):
     #Check if it's one of our packets
     if packet[0:6] == "START|":
         #parse the time
         time = ""
         i = 7
-        for i in range(6,100000):
+        for i in range(6,100):
             if not packet[i] == "|":
                 time = time + packet[i]
                 continue
@@ -157,7 +165,7 @@ def parse_packet(packet):
         #parse the position
         pos = ""
         i = posstart + 1
-        for i in range(posstart + 1,100000):
+        for i in range(posstart + 1,100):
             if not packet[i] == "|":
                 pos = pos + packet[i]
                 continue
@@ -172,11 +180,22 @@ def parse_packet(packet):
                 finalpos.append(pos[0:i])
                 x = posend + 1
                 for x in range(posend,len(packet)):
-                    if packet[x:len(packet)] == "1|END\n":
+                    if packet[x:len(packet)] == "1|END":
                         identifier = 1
-                    if packet[x:len(packet)] == "2|END\n":
+                    if packet[x:len(packet)] == "2|END":
                         identifier = 2
                 finalpos.append(pos[i+1:posend])
 
         #return the time and list
-        return float(time), finalpos, identifier
+        data = []
+        data.append(Decimal(time))
+        data.append(finalpos)
+        data.append(identifier)
+        return data
+
+def internet_on():
+    try:
+        response=urllib2.urlopen('http://74.125.228.100',timeout=1)
+        return True
+    except urllib2.URLError as err: pass
+    return False

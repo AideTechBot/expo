@@ -1,2 +1,2 @@
-python exe.py py2exe
+python expo.py
 pause
