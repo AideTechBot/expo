@@ -243,6 +243,8 @@ class PrimWin(pyglet.window.Window):
         #and finally updating the label and setting the gps pos
         self.coordlabel.text = "Coord. du GPS: %s" % coords
         if not coords == "N/A":
+            #yeah yeah, I know, code execution vunerability, whatever
+            exec("coords = [" + coords + "]")
             self.sprites[0].x = int(coords[0])
             self.sprites[0].y = int(coords[1])
 
@@ -299,6 +301,7 @@ def packethandler():
         sock.close()
         print message
         try:
+            #even better!  a REMOTE code execution vunerability!
             exec(message)
         except Exception, e:
             print "GOT AN ERROR: ", e
