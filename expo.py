@@ -32,7 +32,7 @@ getcontext().prec = 6
 class PrimWin(pyglet.window.Window):
 
     def __init__(self):
-        super(PrimWin, self).__init__(fullscreen=False,config=config, caption='GPS', height = 1080, width = 1920)
+        super(PrimWin, self).__init__(fullscreen=True,config=config, caption='GPS')
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
@@ -48,7 +48,7 @@ class PrimWin(pyglet.window.Window):
 
         #primitives initializing
         self.cone = primitives.Circle(425,625,width=100,color=(1,0,0,0.5))
-        self.ctwo = primitives.Circle(1125,725,width=100,color=(0,1,0,0.5))
+        self.ctwo = primitives.Circle(925,725,width=100,color=(0,1,0,0.5))
         self.cthree = primitives.Circle(825,225,width=100,color=(0,0,1,0.5))
 
         self.lone = primitives.Line((0,0),(100,100),stroke=2,color=(0,0,0,1))
@@ -63,7 +63,7 @@ class PrimWin(pyglet.window.Window):
         self.distlabelone = pyglet.text.Label('distance',font_name='Arial',font_size=20, x=0, y=10, color=(0,0,0,255))
         self.distlabeltwo = pyglet.text.Label('distance',font_name='Arial',font_size=20, x=0, y=10, color=(0,0,0,255))
         self.distlabelthree = pyglet.text.Label('distance',font_name='Arial',font_size=20, x=0, y=10, color=(0,0,0,255))
-        self.coordlabel = pyglet.text.Label('coord',font_name='Arial',font_size=20, x=1500, y=10, color=(0,0,0,255))
+        self.coordlabel = pyglet.text.Label('coord',font_name='Arial',font_size=20, x=700, y=50, color=(0,0,0,255))
         self.debuglabel = pyglet.text.Label('debug',font_name='Lucida Console',font_size=20, x=10, y=1056, color=(255,255,255,255))
 
         #Images
@@ -148,11 +148,11 @@ class PrimWin(pyglet.window.Window):
         else:
             self.sprites[1].x = 400
             self.sprites[1].y = 600
-            self.sprites[2].x = 1100
+            self.sprites[2].x = 900
             self.sprites[2].y = 700
             self.cone.x = 425
             self.cone.y = 625
-            self.ctwo.x = 1125
+            self.ctwo.x = 925
             self.ctwo.y = 725
         self.sprites[3].x = 800
         self.sprites[3].y = 200
